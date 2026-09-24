@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense &amp; Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Dashboard Summary -->
+  <header id="dashboard" role="banner">
+    <div class="dashboard-inner">
+      <h1 class="app-title">💰 Budget Visualizer</h1>
+      <div class="summary-cards">
+        <div class="summary-card" id="card-balance">
+          <span class="card-label">Balance</span>
+          <span class="card-value" id="total-balance" aria-live="polite">0.00</span>
+        </div>
+        <div class="summary-card income-card" id="card-income">
+          <span class="card-label">Income</span>
+          <span class="card-value" id="total-income" aria-live="polite">0.00</span>
+        </div>
+        <div class="summary-card expense-card" id="card-expenses">
+          <span class="card-label">Expenses</span>
+          <span class="card-value" id="total-expenses" aria-live="polite">0.00</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification banner (injected by JS) -->
+  <div id="notification-area" aria-live="polite"></div>
+
+  <main id="main-content">
+
+    <!-- Add Transaction Form -->
+    <section id="transaction-form-section" aria-label="Add Transaction">
+      <h2>Add Transaction</h2>
+      <form id="transaction-form" novalidate>
+
+        <div class="field-group">
+          <label for="tx-description">Description</label>
+          <input type="text" id="tx-description" name="description"
+                 maxlength="100" required placeholder="e.g. Lunch at cafe"
+                 aria-describedby="err-description">
+          <span id="err-description" class="field-error" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="tx-amount">Amount</label>
+          <input type="number" id="tx-amount" name="amount"
+                 min="0.01" max="999999999.99" step="0.01" required
+                 placeholder="0.00" aria-describedby="err-amount">
+          <span id="err-amount" class="field-error" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="field-group">
+            <label for="tx-type">Type</label>
+            <select id="tx-type" name="type" required aria-describedby="err-type">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+            <span id="err-type" class="field-error" role="alert" aria-live="assertive"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="tx-category">Category</label>
+            <select id="tx-category" name="category" required aria-describedby="err-category">
+              <!-- populated by CategoryManager.buildCategorySelects() -->
+            </select>
+            <span id="err-category" class="field-error" role="alert" aria-live="assertive"></span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="tx-date">Date</label>
+          <input type="date" id="tx-date" name="date" required aria-describedby="err-date">
+          <span id="err-date" class="field-error" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Transaction</button>
+      </form>
+    </section>
+
+    <!-- Transaction History -->
+    <section id="transaction-history-section" aria-label="Transaction History">
+      <h2>Transaction History</h2>
+      <ul id="transaction-list" role="list" aria-live="polite" aria-label="Transaction list">
+        <!-- rendered by UIController.renderTransactionList() -->
+      </ul>
+    </section>
+
+    <!-- Spending Chart -->
+    <section id="chart-section" aria-label="Spending by Category">
+      <h2>Spending by Category</h2>
+      <div class="chart-wrapper">
+        <canvas id="spending-chart" width="600" height="300"
+                role="img" aria-label="Doughnut chart of spending by category"></canvas>
+        <p id="chart-empty" hidden>No expense data to display yet. Add some expense transactions to see the chart.</p>
+      </div>
+    </section>
+
+    <!-- Monthly Summary -->
+    <section id="summary-section" aria-label="Monthly Summary">
+      <h2>Monthly Summary</h2>
+      <div class="field-group summary-month-group">
+        <label for="summary-month">Select Month</label>
+        <select id="summary-month" aria-label="Select month for summary">
+          <!-- populated by SummaryView.bindMonthSelector() -->
+        </select>
+      </div>
+      <div id="summary-values" aria-live="polite">
+        <div class="summary-row income-row">
+          <span class="summary-label">Income</span>
+          <span class="summary-amount" id="summary-income">0.00</span>
+        </div>
+        <div class="summary-row expense-row">
+          <span class="summary-label">Expenses</span>
+          <span class="summary-amount" id="summary-expenses">0.00</span>
+        </div>
+        <div class="summary-row balance-row">
+          <span class="summary-label">Net Balance</span>
+          <span class="summary-amount" id="summary-balance">0.00</span>
+        </div>
+      </div>
+      <p id="summary-empty" hidden>No data available for this month.</p>
+    </section>
+
+    <!-- Manage Categories -->
+    <section id="category-section" aria-label="Manage Categories">
+      <h2>Manage Categories</h2>
+      <form id="category-form" novalidate>
+        <div class="field-group">
+          <label for="cat-name">New Category Name</label>
+          <div class="inline-form">
+            <input type="text" id="cat-name" name="cat-name"
+                   maxlength="50" placeholder="e.g. Gym, Travel…"
+                   aria-describedby="err-category-name">
+            <button type="submit" class="btn btn-secondary">Add</button>
+          </div>
+          <span id="err-category-name" class="field-error" role="alert" aria-live="assertive"></span>
+        </div>
+      </form>
+      <ul id="category-list" role="list" aria-label="Category list">
+        <!-- rendered by CategoryManager.renderList() -->
+      </ul>
+    </section>
+
+    <!-- Spending Limits -->
+    <section id="limits-section" aria-label="Spending Limits">
+      <h2>Spending Limits</h2>
+      <p class="section-hint">Set a monthly limit per category. You'll be alerted when you exceed it.</p>
+      <div id="limits-list">
+        <!-- rendered by SpendingLimitsController.renderList() -->
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
